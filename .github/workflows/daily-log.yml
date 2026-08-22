@@ -1,0 +1,50 @@
+name: daily-log
+
+on:
+  # UTC 13:00 = KST 22:00. 자정까지 2시간 버퍼를 둬서 Actions schedule 지연에도
+  # 커밋이 같은 날에 찍히도록 한다 (schedule 트리거는 수십 분 지연·스킵될 수 있다).
+  schedule:
+    - cron: '0 13 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  log:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # 수집이 실패해도 실패 사실을 담은 로그 파일은 커밋해야 하므로
+      # 여기서 잡을 끊지 않고, 마지막 단계에서 실패로 종료한다.
+      - name: 하루 로그 생성
+        id: build
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GRASS_LOG_TOKEN }}
+        run: node scripts/build-log.mjs
+
+      # author 이메일을 명시하지 않으면 github-actions[bot] 으로 커밋되어
+      # 기여 그래프에 카운트되지 않는다.
+      - name: 커밋 & 푸시
+        run: |
+          git config user.name '신규하'
+          git config user.email 'nicegyuha@gmail.com'
+          git add logs
+          if git diff --cached --quiet; then
+            echo '변경 없음 — 커밋 생략'
+          else
+            git commit -m "chore: $(TZ=Asia/Seoul date +%F) 활동 로그"
+            git push
+          fi
+
+      - name: 수집 실패 시 잡을 실패로 종료
+        if: steps.build.outcome == 'failure'
+        run: |
+          echo '::error::로그 수집이 실패했습니다. 실패 사실을 담은 로그 파일은 커밋되었습니다.'
+          exit 1
