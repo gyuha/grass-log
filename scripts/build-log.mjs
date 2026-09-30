@@ -14,9 +14,14 @@ function parseArgs(argv) {
   return args;
 }
 
-/** Asia/Seoul 기준 오늘 날짜 (YYYY-MM-DD). */
+/**
+ * 기록 대상 날짜 (Asia/Seoul, YYYY-MM-DD).
+ * Actions schedule 이 자정을 넘겨 지연 실행돼도 그 전날이 기록되도록,
+ * KST 정오 이전 실행은 전날로 본다.
+ */
 function todayKst() {
-  return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' });
+  const shifted = new Date(Date.now() - 12 * 60 * 60 * 1000);
+  return shifted.toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' });
 }
 
 const args = parseArgs(process.argv.slice(2));
