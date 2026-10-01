@@ -7,7 +7,7 @@
 ## 동작
 
 ```
-KST 22:00 (cron '0 13 * * *')
+KST 01:00 (cron '0 16 * * *') — 전날 로그를 기록
    → GitHub GraphQL 로 그날 활동 수집
    → logs/YYYY/MM/YYYY-MM-DD.md 생성
    → 변경이 있으면 커밋 & 푸시
@@ -67,7 +67,7 @@ gh secret set GRASS_LOG_TOKEN --repo gyuha/grass-log
 # 특정 날짜를 표준출력으로 (파일을 쓰지 않음)
 GH_TOKEN=$(gh auth token) node scripts/build-log.mjs --date 2026-08-21 --stdout
 
-# 파일로 기록 (--date 생략 시 Asia/Seoul 기준 오늘)
+# 파일로 기록 (--date 생략 시 Asia/Seoul 기준 어제)
 GH_TOKEN=$(gh auth token) node scripts/build-log.mjs --date 2026-08-21
 ```
 
@@ -89,4 +89,4 @@ node --test
 gh workflow run daily-log.yml --repo gyuha/grass-log
 ```
 
-Actions 의 `schedule` 트리거는 정시에 오지 않는다 — 부하가 높으면 수십 분 지연되고 아예 스킵될 수도 있다. 그래서 KST 22:00 으로 두 시간 버퍼를 뒀고, 구멍이 난 날은 위 명령으로 메꾼다.
+Actions 의 `schedule` 트리거는 정시에 오지 않는다 — 부하가 높으면 수십 분 지연되고 아예 스킵될 수도 있다. 그래서 하루가 끝난 뒤 KST 01:00 에 전날을 기록하며, 어느 날이든 지연돼도 같은 날짜를 기록한다. 구멍이 난 날은 위 명령으로 메꾼다.

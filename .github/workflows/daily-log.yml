@@ -1,10 +1,9 @@
 name: daily-log
 
 on:
-  # UTC 13:00 = KST 22:00. 자정까지 2시간 버퍼를 둬서 Actions schedule 지연에도
-  # 커밋이 같은 날에 찍히도록 한다 (schedule 트리거는 수십 분 지연·스킵될 수 있다).
+  # UTC 16:00 = KST 01:00. 하루가 끝난 뒤 다음날 새벽에 전날 로그를 기록한다.
   schedule:
-    - cron: '0 13 * * *'
+    - cron: '0 16 * * *'
   workflow_dispatch:
 
 permissions:
@@ -39,7 +38,9 @@ jobs:
           if git diff --cached --quiet; then
             echo '변경 없음 — 커밋 생략'
           else
-            git commit -m "chore: $(TZ=Asia/Seoul date +%F) 활동 로그"
+            # 새벽 실행이면 기록 대상이 전날이므로, 실행일이 아니라 로그 파일명의 날짜를 쓴다.
+            log_date=$(basename "$(git diff --cached --name-only | head -n1)" .md)
+            git commit -m "chore: ${log_date} 활동 로그"
             git push
           fi
 

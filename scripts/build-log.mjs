@@ -14,18 +14,14 @@ function parseArgs(argv) {
   return args;
 }
 
-/**
- * 기록 대상 날짜 (Asia/Seoul, YYYY-MM-DD).
- * Actions schedule 이 자정을 넘겨 지연 실행돼도 그 전날이 기록되도록,
- * KST 정오 이전 실행은 전날로 본다.
- */
-function todayKst() {
-  const shifted = new Date(Date.now() - 12 * 60 * 60 * 1000);
+/** 기록 대상 날짜 (Asia/Seoul 기준 어제, YYYY-MM-DD). 하루 로그는 다음날 작성한다. */
+function yesterdayKst() {
+  const shifted = new Date(Date.now() - 24 * 60 * 60 * 1000);
   return shifted.toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' });
 }
 
 const args = parseArgs(process.argv.slice(2));
-const date = args.date ?? todayKst();
+const date = args.date ?? yesterdayKst();
 if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
   console.error(`날짜 형식이 잘못됐습니다: ${date} (YYYY-MM-DD)`);
   process.exit(2);
